@@ -432,7 +432,7 @@ editable by MXDeviceManager
     }
   }
   
-  // controle value functions 
+  // check control value functions 
   madiChannelSV_ { arg value;		
 		if (value != madiChannelSV.value) {
 			madiChannelSV.value = value;	
