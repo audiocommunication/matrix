@@ -475,10 +475,21 @@ editable by MXDeviceManager
     }
   }
 
+// function to collect Connected Devices from Dictionary and add as drop down item
+    getMadiChannels {
+        var name, channel;
+        madiChannelSV.items = ["Choose Input Source"]; "define initial command without connection"
+		
+        MXMadiBridge.madiBridgeChannels.do({arg assoc, r;
+		    name = assoc.key.asSymbol;  //extract Name of Input Device
+            channel = assoc.value.asInteger;  //extract associated Channel as Int value
+            madiChannelDict.add(name -> channel);   //connect name and Channel in Dict
+            madiChannelSV.items = madiChannelSV.items ++ name; //add Name as item to Dropdown Menu
+        });
+    }
 
 
-
-  getMonitorPresets { // collect all monitorpresets that doesn't have more inputs than the number of channels in this device:
+	getMonitorPresets { // collect all monitorpresets that doesn't have more inputs than the number of channels in this device:
     var name, connectionarray;
     routSV.items = [ (MXMonitorManager.mainMonitor.name + "off").asSymbol ]; // has always at least this item!
 
@@ -522,7 +533,10 @@ editable by MXDeviceManager
     switch (type)
       { \in }   {Ê  inputs = ioArray;     // Array of MXInputs
             outputs = busArray;   // Array of MXBusses 
-          } 
+          }
+	  { \madibridgeIN } 	{Ê	inputs = ioArray; 	// Array of MXInputs  of Madi Bridge
+						outputs = busArray; 	     // Array of MXBusses 
+					}
       { \out }  {Ê  inputs = busArray;  // Array of MXBusses 
             outputs = ioArray;    // Array of MXOutputs
           } 
