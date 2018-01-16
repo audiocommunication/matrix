@@ -1039,6 +1039,15 @@ MXDeviceManager {  // singleton !
       } { 
         "WARNING: no input devices found in file".postln;
       };
+	  
+// read Devices from config file (devices.txt) add if existing
+      if (dict.includesKey( \madibridgeIN )) { 
+        dict[\madibridgeIN].do {Êarg assoc, i;
+          this.addDeviceFromArray(\madibridgeIN, [assoc.key] ++ assoc.value );}
+        }{
+        "WARNING: no madi bridge Input routing found, Setup without madi bridge control".postln;
+        };
+
       if (dict.includesKey( \monitors )) { 
         dict[\monitors].do {Êarg assoc, i;
           this.addDeviceFromArray(\monitorout, [assoc.key] ++ assoc.value );
@@ -1071,15 +1080,21 @@ MXDeviceManager {  // singleton !
     busNums = Dictionary.new;
     busNums.add( 48000.0 -> (( array[1][0] .. array[1][1] ) ).collect(_.asInteger - 1) );
     busNums.add( 96000.0 -> (( array[2][0] .. array[2][1] ) ).collect(_.asInteger - 1) );
-    if (type == \in) {
+    if (type == \in){
       busNums[48000.0] = busNums[48000.0] + MXGlobals.numOutputs;
       busNums[96000.0] = busNums[96000.0] + MXGlobals.numOutputs;
     };
-
+  //Add Busses for MadiBridge Input Device
+	if (type == \madibridgeIN){
+      busNums[48000.0] = busNums[48000.0] + MXGlobals.numOutputs;
+      busNums[96000.0] = busNums[96000.0] + MXGlobals.numOutputs;
+    };
+	
   //  busNums[48000.0].postln;
     ioDict = Dictionary.new;
     switch (type)
       {\in}       { cons =  MXMain.ioManager.inputs }
+	  {\madibridgeIN} 	{ cons =  MXMain.ioManager.inputs } //add Input devices to ioDict
       {\out}      { cons =  MXMain.ioManager.outputs }
       {\monitorout}   { cons =  MXMain.ioManager.outputs }
       ;
@@ -1107,6 +1122,7 @@ MXDeviceManager {  // singleton !
 
     switch (type)
       {\in}       { inDevices.add(device) }
+	  {\madibridgeIN}   { inDevices.add(device) } //Add devices to MXDeviceManager.inDevices
       {\out}      { outDevices.add(device) }
       {\monitorout}   { 
        // outDevices.add(device);
