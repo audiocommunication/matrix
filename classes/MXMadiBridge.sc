@@ -1,16 +1,19 @@
 /*
 
-Matrix Update with Madi Bridge application
+Matrix Update with Madi Bridge application by Jakob Greif
 
-read devices.txt for MadiBridge IN/Out Channeling and Madi Bridge Routing
+Define in devices.txt if a Madi Bridge ist connected to the Matrix
+if there is a dictionary with type "\madibridgeIN" in "devices.txt" the Device will be created.
+MXMadiBridge reads the the Channel Setup, defined in: "madiconfig.txt". There the Channels and Names of 
+connected Devices can be definded. 
 
 */
 
 
 MXMadiBridge {
 	classvar <madiBridgeChannels;
-	classvar <deviceNameTest;
-	classvar <portOutNameTest;
+	classvar <MidiDeviceName;
+	classvar <MidiDevicePort;
 	classvar <madiBridgeMidiOut;
 	
 	
@@ -22,13 +25,14 @@ MXMadiBridge {
 	this.initMIDIConnection;	
 	}	
 	
+	// read Config File and add to List: madiBridgeChannels
 	*readConfig {
 	var path, arrayfromfile, dict;
 		path = MXGlobals.configDir ++ "madiconfig.txt";
 		if (File.exists(path)) {
 			("\n------------------\nreading" + path + "\n------------------").postln;
 			arrayfromfile = File.open(path, "r").readAllString.interpret;
-		//	arrayfromfile.postln;
+		//	arrayfromfile.postln; 
 			if (arrayfromfile.isNil) { "WARNING: no madi bridge Channels declared in midiConfig.txt".postln };
 			arrayfromfile.do { arg assoc, i;
 				this.addMadiChannelFromArray([ assoc.key] ++ assoc.value );
@@ -37,67 +41,39 @@ MXMadiBridge {
 			"FILE ERROR: monitorpresets.txt not found!".postln; 
 		};
 		
-	deviceNameTest = "MT4";
+	MidiDeviceName = "USB MIDI Interface";
 	
 	}	
-		
+	// read config File split name and Channel and add to List	
 	*addMadiChannelFromArray {arg array;
 	var name, channel;
-	
 	name = array[0].asString;
-	//channel = array[1].asInteger;
-	channel = array[1].asInteger;
-		
-	// if (madiBridgeChannels.isNil) {madiBridgeChannels.put(}
-	
+	channel = array[1].asInteger;	
 	madiBridgeChannels.add(name -> channel);
 	("Madi Bridge Channel added:" + name + channel).postln;
-     }
-
+    }
+	 
+	// initialize Midi connection for USB MIDI Interface
 	*initMIDIConnection{
-	deviceNameTest = "USB MIDI Interface";
-	portOutNameTest = "USB MIDI Interface";
-	madiBridgeMidiOut = MIDIOut.findPort(deviceNameTest, portOutNameTest);
-	
-	// madiBridgeMidiout = MIDIOut.newByName(deviceNameTest, portOutNameTest);
+	MidiDeviceName = "USB MIDI Interface";
+	MidiDevicePort = "USB MIDI Interface";
+	// define Midi Out 
+	madiBridgeMidiOut = MIDIOut.findPort(MidiDeviceName, MidiDevicePort);
 	}
 
+	//function to Change madiBridge Source Channel. Called by MXDevice madiChannelSV.action
 	*changeMadiChannel {
 	arg changer;
-	//changer.postln;
-	// var changer = 5;
-	deviceNameTest = "USB MIDI Interface";
-	portOutNameTest = "USB MIDI Interface";
-	madiBridgeMidiOut = MIDIOut.findPort(deviceNameTest, portOutNameTest);
-	madiBridgeMidiOut = MIDIOut.newByName(deviceNameTest, portOutNameTest);
-	madiBridgeMidiOut.sysex(Int8Array[0x00, 0xF0, 0x00, 0x20, 0x0D, 0x65, 0x00, 0x20, 0x5F, changer , 0xF7]);
-					
-	}		
+	//("Change Source Channel on Madi Bridge to" + changer).postln;
+	//MadyOutInit has to be done every time sysex is sent
+	MidiDeviceName = "USB MIDI Interface";
+	MidiDevicePort = "USB MIDI Interface";
+	madiBridgeMidiOut = MIDIOut.findPort(MidiDeviceName, MidiDevicePort);
+	madiBridgeMidiOut = MIDIOut.newByName(MidiDeviceName, MidiDevicePort);
+	//Sending Sysex Messege to MadiBridge to Change Source Channel for 
+	// Current Out to be Changed 7->0x5E; 8->0x5F; Change Source to 'changer'
+	// for more info Check MIDI Implementation Chart in RME Website: https://www.rme-audio.de/download/madibridge_d.pdf
 	
-//		MIDIClient.destinations;
-//		MIDIClient.sources;
-
-
-/*
-//var x_test = 0x07;
-// var x_test = 0x06;
-var deviceNameTest = "MT4";
-var portOutNameTest = "Port 1";
-var mtmidiout1;
-
-//mtmidiout1 = MIDIOut.findPort(deviceNameTest, portOutNameTest);
-//mtmidiout1 = MIDIOut.newByName(deviceNameTest, portOutNameTest);
-// MT4out1.postln
-//mtmidiout1.sysex(Int8Array[0x00, 0xF0, 0x00, 0x20, 0x0D, 0x65, 0x00, 0x20, 0x5F, x_test, 0xF7]);
-
-
-mtmidiout1 = MIDIOut.
-
-MXMIDI.midiModels.postln;
-MXMIDI.midiDeviceDict.postln;
-MXMIDI.midiDevice.modelMessageDict.postln;
-*/		
-	
+	madiBridgeMidiOut.sysex(Int8Array[0x00, 0xF0, 0x00, 0x20, 0x0D, 0x65, 0x00, 0x20, 0x5E, changer , 0xF7]);
+	}			
 }
-
-//MXMain.init("/Users/matrix/_MATRIX/config/");
