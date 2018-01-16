@@ -773,10 +773,10 @@ MXDeviceView {
   routingMenu
     alt: showMatrixButton (trigger)
 */
-  var <parent, <bounds;  // parent: sourcesTab of routingTabs
+  var <parent, <bounds, dev;  // parent: sourcesTab of routingTabs
   var <panel, <titleButton, <meterView, <muteButton, <gainNumber, <phonesButton, <nearButton, <matrixButton;
   var <multimeterButton, <spectralButton;
-  var <routingMenu, <showMatrixButton;
+  var <routingMenu, <showMatrixButton, <madiTitleMenu;
   var <controlMenu;
   var <font, <smallFont, <titleFont;
   var <backgroundColorOff, <backgroundColorOn;
@@ -788,11 +788,11 @@ MXDeviceView {
   var <titleFrameColor; 
   var <device;  // associated inDevice
   
-  *new { arg parent, bounds;
-    ^super.new.initView(parent, bounds)
+  *new { arg parent, bounds, dev;
+    ^super.new.initView(parent, bounds, dev)
   }
 
-  initView { arg argparent, argbounds;
+  initView { arg argparent, argbounds, dev;
     var panelrect, button1size, button2size, button3size, hgap=4, vgap=4, radius=5, shifty= 0, border=0;
     parent = argparent;
     bounds = argbounds.asRect;
@@ -829,6 +829,16 @@ MXDeviceView {
       .font_(titleFont);
   */
   
+//create Dropdown Menu for Madi Bridge Device and Normal titleButton for other input Devices
+    if (dev.type == \madibridgeIN) { 
+        madiTitleMenu = SCPopUpMenu(panel, button1size)
+            .font_(titleFont)
+            .stringColor_(titleTextColorOn)
+            .background_(Color.blue(0.9,0.2))  //change Color of Title Dropdown Menu
+            .items_( (0 .. 3).collect(_.asString) );
+	}{
+	
+//for all other input devices create normal TitleButton
     titleButton = MXStringView(panel, button1size, radius)
       .shifty_(-2)
       .font_(titleFont)
@@ -840,6 +850,7 @@ MXDeviceView {
     //  .borderColor_(Color.grey(0.5))
       .inset_(0)
       .string_("device");
+	};
 
     muteButton = MXButton(panel, button3size, radius)
       .shifty_(shifty)
@@ -898,7 +909,7 @@ MXDeviceView {
       ;
   
     panel.decorator.reset;
-    panel.decorator.shift(4, 4);
+    panel.decorator.shift(193, 4); //set location of MeterLED to right side otherwise (4,4)
       
     meterView = MXLEDView(panel, 17@17)
       .background_(Color.green(0.0, 0.8))
@@ -920,6 +931,7 @@ MXDeviceView {
     
     phonesButton.visible_(bool);
     nearButton.visible_(bool);
+	madiTitleMenu.visible_(bool); //contole bool for title Menu
   //  nearButton.enabled_(bool);
   //  matrixButton.visible_(bool);
     routingMenu.visible_(bool);
@@ -928,13 +940,20 @@ MXDeviceView {
     gainNumber.visible_(bool);
     meterView.visible_(bool);
   }
-  
+
+// connect device specifics with graphics of device Block
   connect { arg dev;
     device = dev;
-    { 
-    titleButton.string = device.name;
+    {
+// connecte madiTitleMenu with Madi Channel Select Value 
+    if (device.type == \madibridgeIN) {
+        madiTitleMenu.connect(device.madiChannelSV);				
+	}{ //else Set titleButton caption to Name the Device
+		titleButton.string = device.name;
   //  titleButton.connect(device.active);
   //  this.enable(true);
+    };
+  
     dev.guifunc = {Êarg value;
   //    this.enable(value.booleanValue);    
     };
@@ -947,6 +966,7 @@ MXDeviceView {
     nearButton.connect(device.near);
     // matrixButton > ??
     routingMenu.connect(device.routSV);
+	// change color of dropdown Menu if Routing preset is selected (optional for Madi Bridge Menu)
     device.routSV.action = { arg changer, what;  
       if ( changer.value > 0 ) {
         {ÊroutingMenu.background = Color.green; }.defer;
