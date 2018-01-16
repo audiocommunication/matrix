@@ -241,7 +241,8 @@ editable by MXDeviceManager
   var <>guifunc;    // Function to change Views according to active
   var <>ctlgainfunc;  // Function for connecting this gain MXCV to the MXMIDI control model
   var <>ctlmutefunc;  // Function for connecting this mute MXCV to the MXMIDI control model
-  
+  var <madiChannelDict;   //Dictionary with Madi Channel and Name of conected Devices
+  var <madiChannelSV;     //MXCV[Channel Names] Symbols for Madi Channel Selection Menu
   
   *new { arg name, type, ioDict;
     ^super.new.init(name, type, ioDict);
@@ -275,7 +276,9 @@ editable by MXDeviceManager
       guifunc.value(active.value);
       if (changer.value == 1) {
         switch (type)
-          { \in }   {Êthis.startDSP(MXMain.deviceManager.inGroup) }           { \out }  {Êthis.startDSP(MXMain.deviceManager.outGroup) }  
+          { \in }   {Êthis.startDSP(MXMain.deviceManager.inGroup) }      
+		  { \madibridgeIN } 	{Êthis..startDSP(MXMain.deviceManager.inGroup) } //add madibridge Device as input
+		  { \out }  {Êthis.startDSP(MXMain.deviceManager.outGroup) }  
           ; 
       } {
         this.stopDSP;
@@ -283,6 +286,12 @@ editable by MXDeviceManager
       };  
     };
     
+     madiChannelSV = MXSV( [ nil ], 0); //define ControlSpec for MadiChannel Drop down Menu
+     madiChannelSV.action = {arg changer, what;
+       if (active.value == 1) { // turn of routings?
+           MXMadiBridge.changeMadiChannel(madiChannelDict[madiChannelSV.item]);	
+	
+	
   //  routSV = MXSV( [ \off, \matrix ], 0);     // has always at least these two items!
   //  routSV = MXSV( [ \off ], 0);    // has always at least this item!
     routSV = MXSV( [ nil  ], 0);     
@@ -422,7 +431,20 @@ editable by MXDeviceManager
       routSV.item = item; 
     }
   }
+  
+  // controle value functions 
+  madiChannelSV_ { arg value;		
+		if (value != madiChannelSV.value) {
+			madiChannelSV.value = value;	
+		}
+	}
 
+	madiChannelSVItem_ { arg item;		
+		if (item != madiChannelSV.item) {
+			madiChannelSV.item = item;	
+		}
+	}
+	
   controlSV_ { arg value;   
     if (value != controlSV.value) {
       controlSV.value = value;  
