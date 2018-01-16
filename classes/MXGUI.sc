@@ -480,8 +480,8 @@ MXGUI { // singleton !
     inDevicesPanel.decorator = FlowLayout(inDevicesPanel.bounds, margin: hgap@vgap, gap: hgap@vgap);
     
     inDevicesViews = MXDeviceManager.inDevices.collect({ arg dev, i;
-      var dview;
-      dview = MXDeviceView(inDevicesPanel, (inDevicesPanel.bounds.width - (inDevicesPanel.decorator.gap.x * 4) / cols - 0.1) @ 140);
+      var dview; //pass dev to MXDeviceView to check if \madibridgeIN or \in
+      dview = MXDeviceView(inDevicesPanel, (inDevicesPanel.bounds.width - (inDevicesPanel.decorator.gap.x * 4) / cols - 0.1) @ 140, dev);
       dview.connect(dev);
     });
     rows = (MXDeviceManager.outDevices.size / cols).ceil;
@@ -491,7 +491,7 @@ MXGUI { // singleton !
     
     outDevicesViews = MXDeviceManager.outDevices.collect({ arg dev, i;
       var dview;
-      dview = MXDeviceView(outDevicesPanel, (outDevicesPanel.bounds.width - (outDevicesPanel.decorator.gap.x * 4) / cols - 0.1) @ 140);
+      dview = MXDeviceView(outDevicesPanel, (outDevicesPanel.bounds.width - (outDevicesPanel.decorator.gap.x * 4) / cols - 0.1) @ 140, dev);
       dview.connect(dev);
     });   
     
