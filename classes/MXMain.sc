@@ -41,6 +41,7 @@ Setup name
 MXMain { // singleton !
   classvar <ioManager;
   classvar <deviceManager;
+  classvar <madiManager;
   classvar <monitorManager;
   classvar <meterManager;
   classvar <matrixManager;
@@ -70,6 +71,7 @@ MXMain { // singleton !
       
       // call MXDeviceManager:
       monitorManager  = MXMonitorManager.init;
+	  madiManager = MXMadiBridge.init; // init MadiBridge Device Manager class
       deviceManager = MXDeviceManager.init;
       meterManager  = MXMeterManager.init;
       // reads devices.txt
